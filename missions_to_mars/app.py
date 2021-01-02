@@ -1,9 +1,6 @@
-from flask import Flask, render_template
-from splinter import Browser
-from bs4 import BeautifulSoup
-from webdriver_manager.chrome import ChromeDriverManager
-import pandas as pd
+from flask import Flask, render_template, redirect
 import pymongo
+
 
 #instantiate flask app
 app = Flask(__name__)
@@ -13,28 +10,37 @@ app = Flask(__name__)
 conn = 'mongodb://localhost:27017'
 client = pymongo.MongoClient(conn)
 
+#connect to mars DB; create if doesn't exist
+db = client.mars_db
+
+#connect to mars collection
+mars_coll = db.mars
 
 
 @app.route('/')
 def index():
-    #code here
+    
+    mars_data = mars_coll.find_one()
+     
+    return(render_template('index.html', mars_data = mars_data))
 
 @app.route('/scrape')
 def scrape():
+
+    # this is the py script with all of the scraping functions 
+    import scrape_mars
     
-    #connect to mars DB; create if doesn't exist
-    db = client.mars_db
+    #gather documents to insert
+    nasa_document = scrape_mars.scrape_all()
 
-#connect to mars collection
-mars = db.mars
-#gather documents to insert
-data_document = scrape_all()
+    #insert into mars collection
+    # mars_coll.insert_one(data_document)
 
-#insert into mars collection
-# mars.insert_one(data_document)
+    #upsert into database (prefered to avoid duplicates) 
+    mars_coll.update_one({}, {'$set': nasa_document}, upsert = True)
 
-#upsert into database (prefered to avoid duplicates) 
-mars.update_one({}, {'$set': data_document}, upsert = True)
+    return redirect('/')
+
 
 if __name__ == '__main__':
     app.run(debug=True)

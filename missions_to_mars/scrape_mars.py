@@ -1,9 +1,4 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
+#import dependencies
 from splinter import Browser
 from bs4 import BeautifulSoup
 from webdriver_manager.chrome import ChromeDriverManager
@@ -12,8 +7,7 @@ import pymongo
 
 
 
-# In[51]:
-
+# %%
 
 #Configure chrome driver for clicking through pages o/w we could just use requests and get 
 #Setup splinter
@@ -21,10 +15,8 @@ executable_path = {'executable_path': ChromeDriverManager().install()}
 browser = Browser('chrome', **executable_path, headless=False) #** unpacks values and opens browser
 
 
-
-
-# In[68]:
-
+# %%
+# Mars image
 
 def mars_news():
     url = "https://mars.nasa.gov/news/"
@@ -40,8 +32,8 @@ def mars_news():
     return news_date, news_p, news_title
 
 
-# In[82]:
-
+# %%
+# Mars Image
 
 def mars_img():
     
@@ -71,12 +63,12 @@ def mars_img():
 #     img_rel_url = image_soup.find('img', class_ = "fancybox-image")['src']
 #     print(img_rel_url)
 
-    featured_img_url = f'{base_url}{img_rel_url2}'
+    featured_img_url = f'{base_url}{img_rel_url}'
     return featured_img_url
 
 
-# In[70]:
-
+# %%
+# Mars Facts table
 
 def mars_facts():
     url = "https://space-facts.com/mars/"
@@ -85,19 +77,21 @@ def mars_facts():
     mars_facts_df = pd.read_html(url)
     mars_facts_df = mars_facts_df[0] #pick first table
     mars_facts_df.columns = ['Description', 'Mars']
-    mars_facts_html = mars_facts_df.to_html(border = 0, classes = 'table table-striped')
+    mars_facts_html = mars_facts_df.to_html(border = 0, classes = 'table table-striped', index = False)
 
     return mars_facts_html
 
 
-# In[66]:
+# %%
+# Mars Hemisphere
 
 
-url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
-browser.visit(url)
+# url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
+# browser.visit(url)
 
-
-# In[75]:
+ 
+# %%
+# Insert into Mongo DB
 
 
 def scrape_all():
@@ -114,10 +108,12 @@ def scrape_all():
         'mars_facts_html': mars_facts_html
     }
 
-    #consider closing browser here
+    #close web scraping browser here
+    browser.quit()
+    
     return nasa_document
 
-
+# %%
 #RUN SCRIPT
 #flask can run on multiple threads. main is the primary thread
 #run this if a user initiate it to run instead of supporting threads
