@@ -1,10 +1,8 @@
 from flask import Flask, render_template, redirect
 import pymongo
 
-
 #instantiate flask app
 app = Flask(__name__)
-
 
 #Connect to mongoDB
 conn = 'mongodb://localhost:27017'

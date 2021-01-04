@@ -40,10 +40,11 @@ def mars_img():
     base_url = 'https://www.jpl.nasa.gov'
     url = 'https://www.jpl.nasa.gov/spaceimages/?search=&category=Mars'
     browser.visit(url)
+    
+    #METHOD 1: parsing through the style attribute in the article tag
     html = browser.html #html source code to parse
     image_soup = BeautifulSoup(html, "html.parser")
-
-    #METHOD 1: parsing through the style attribute in the article tag
+    
     try:
         img_elem = image_soup.find('article', class_="carousel_item")['style']
         img_rel_url = img_elem.replace("background-image: url('", "")
@@ -85,27 +86,48 @@ def mars_facts():
 # %%
 # Mars Hemisphere
 
+def hemispheres():
+    base_url = "https://astrogeology.usgs.gov"
+    url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
+    browser.visit(url)
 
-# url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
-# browser.visit(url)
+    list_elem = [1,3,5,7]
+    hemisphere_image_urls = []
 
- 
+    for link in list_elem:
+        hemisphere_elem = browser.links.find_by_partial_href('map/Mars/Viking')[link]
+        hemisphere_elem.click()
+
+        html = browser.html
+        image_soup = BeautifulSoup(html, "html.parser")
+
+        img_rel_url = image_soup.find('img', class_ = "wide-image")['src']
+        img_title = image_soup.find('h2', class_ = "title").text
+        
+        hemisphere_image_urls.append({'title': img_title, 'img_url': f'{base_url}{img_rel_url}'})    
+
+        url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
+        browser.visit(url)
+
+    return hemisphere_image_urls
+
+
 # %%
-# Insert into Mongo DB
-
 
 def scrape_all():
     #populate variables from functions
     news_date, news_p, news_title = mars_news()
     featured_img_url = mars_img()
     mars_facts_html = mars_facts()
+    hemispheres_list = hemispheres()
 
     #assemble document to insert into database
     nasa_document = {
         'news_title': news_title,
         'news_paragraph': news_p,
         'featured_img_url': featured_img_url,
-        'mars_facts_html': mars_facts_html
+        'mars_facts_html': mars_facts_html,
+        'hemisphere_url': hemispheres_list
     }
 
     #close web scraping browser here
